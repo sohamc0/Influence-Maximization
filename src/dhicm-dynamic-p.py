@@ -3,7 +3,7 @@ import numpy as np
 import time
 import sys
 
-def select_seed_nodes(G, k, p):
+def select_seed_nodes(G, k):
     S = set()
     V = set(G.nodes())  # Assuming G is a NetworkX graph or a similar graph representation
     ddv = {v: G.in_degree(v) for v in V}
@@ -15,10 +15,12 @@ def select_seed_nodes(G, k, p):
         for v in G.predecessors(u):
             if v not in S:
               if u in G.predecessors(v):
+                common_neighbors = set(G.predecessors(v)).intersection(set(G.predecessors(u)))
+                p = 0.01 + ((G.in_degree(u) + G.in_degree(v))/G.number_of_nodes()) + (len(common_neighbors)/G.number_of_nodes())
                 ddv[v] = G.in_degree(v) - 1 - ((G.in_degree(u) - 1) * p)
     return S
 
-def ICM(graph_object,S,mc,p):
+def ICM(graph_object,S,mc):
     """
     Inputs: graph_object: must be networkx directed graph
             S:  List of seed nodes
@@ -39,21 +41,27 @@ def ICM(graph_object,S,mc,p):
 
             # 2. Determine newly activated neighbors (set seed and sort for consistency)
             np.random.seed(i)
-            success = np.random.uniform(0,1,len(targets)) < p
-            new_ones = list(np.extract(success, sorted(targets)))
+            new_ones = []
+            for (curr_target, p) in targets:
+              if np.random.uniform(0,1) < p:
+                new_ones.append(curr_target)
 
             # 3. Find newly activated nodes and add to the set of activated nodes
             new_active = list(set(new_ones) - set(A))
             A += new_active
 
         spread.append(len(A))
+        print("mc #", i+1, " done!")
 
     return(np.mean(spread),A)
 
 def propagate(g, new_active):
     targets = []
     for node in new_active:
-      targets += g.predecessors(node)
+      for neighbor in g.predecessors(node):
+        common_neighbors = set(G.predecessors(node)).intersection(set(G.predecessors(neighbor)))
+        p = 0.01 + ((G.in_degree(node) + G.in_degree(neighbor))/G.number_of_nodes()) + (len(common_neighbors)/G.number_of_nodes())
+        targets.append((neighbor, p))
 
     return targets
 
@@ -73,7 +81,7 @@ G.add_edges_from(edge_list)  # using a list of edge tuples
 
 #getting seed nodes using dhicm
 start_time = time.time()
-s = select_seed_nodes(G, int(sys.argv[2]), 0.1)
+s = select_seed_nodes(G, int(sys.argv[2]))
 print("Time getting seed set: ", time.time() - start_time)
 
 
@@ -82,6 +90,6 @@ print("Time getting seed set: ", time.time() - start_time)
 
 start_time = time.time()
 #getting mean spread
-(mean_spread, A) = ICM(G, list(s), int(sys.argv[3]), 0.1)
+(mean_spread, A) = ICM(G, list(s), int(sys.argv[3]))
 print("Mean spread: ", mean_spread)
 print("Duration: ", time.time() - start_time)
