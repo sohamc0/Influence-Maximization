@@ -26,7 +26,7 @@ After the DHICM algorithm returns the seed set as its output, we use that set as
 ![Different colors represent different communities in the sampled graph (40,000 nodes)](/images/graph-communities.PNG "Communities Within the Network")
 
 ### Results
-With `k = 300`, `p = 0.1 + $\frac{d~i~ + d~j~}{n}$ + $\frac{CN(i,j)}{n}$`...
+With `k = 300`, p = 0.1 + (d<sub>i</sub>/d<sub>j</sub>)/n + $\frac{CN(i,j)}{n}$, where CN(i,j) is the number of common neighbors shared by nodes i and j...
 | Algorithm | Average Spread Achieved |
 | :-------- | :---------------------- |
 | DHICM | 17,475.1 |
